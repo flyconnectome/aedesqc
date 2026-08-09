@@ -54,7 +54,8 @@ tibble::tribble(
   "hemilineage",   "n_hemilineage",
   "nerve",         "n_nerve",
   "neurotransmitter (verified)", "n_nt_verified",
-  "proofreader",   "n_proofreader"
+  "proofreader",   "n_proofreader",
+  "annotator",     "n_annotator"
 ) |>
   filter(field %in% names(latest)) |>
   mutate(Annotated = vapply(field, val, numeric(1)),

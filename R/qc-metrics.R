@@ -107,8 +107,12 @@ prev <- if (nrow(prev)) prev[nrow(prev), ] else NULL
 delta <- make_delta(row, prev)
 warn  <- make_warn(row, prev)
 
-line <- function(label, field, worse_when_up = TRUE) {
-  sprintf("• %s: *%s*%s%s", label, row[[field]], delta(field), warn(field, worse_when_up))
+# FlyTable QC views: link a metric label to the view listing its rows. Only some
+# views exist yet; pass vid = NULL to leave the label unlinked.
+flytable_base <- "https://flytable.mrc-lmb.cam.ac.uk/workspace/148/dtable/aedes/?tid=0000&vid="
+line <- function(label, field, vid = NULL, worse_when_up = TRUE) {
+  lab <- if (is.null(vid)) label else sprintf("<%s%s|%s>", flytable_base, vid, label)
+  sprintf("• %s: *%s*%s%s", lab, row[[field]], delta(field), warn(field, worse_when_up))
 }
 
 # Per-annotator problem counts (any actionable QC issue), latest run.
@@ -125,7 +129,7 @@ ann_txt <- if (nrow(ann_tbl)) {
 
 text <- paste0(
   "*Aedes QC — ", today, "*\n",
-  line("Duplicate root_ids to check", "n_dup_rootids"),
+  line("Duplicate root_ids to check", "n_dup_rootids", vid = "8yT4"),
   sprintf(" over %d root_ids", row$n_dup_rootid_groups), "\n",
   line("Missing root_id", "n_missing_rootid"), "\n",
   line("Missing position", "n_missing_position"), "\n",

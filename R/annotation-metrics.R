@@ -39,7 +39,8 @@ ann_fields <- c(
   hemilineage   = "n_hemilineage",
   nerve         = "n_nerve",
   neurotransmitter_verified = "n_nt_verified",
-  proofreader   = "n_proofreader"
+  proofreader   = "n_proofreader",
+  annotator     = "n_annotator"
 )
 
 covered <- function(field) sum(!is_blank(col_or_na(meta, field)))
@@ -102,7 +103,8 @@ text <- paste0(
   line("class", "n_class"), "\n",
   line("type", "n_type"), "\n",
   line("hemilineage", "n_hemilineage"), "\n",
-  line("proofreader", "n_proofreader"),
+  line("proofreader", "n_proofreader"), "\n",
+  line("annotator", "n_annotator"),
   ann_txt,
   "\n\n<https://flyconnectome.github.io/aedesqc/annotation.html|Annotation dashboard> · ",
   "<https://flyconnectome.github.io/aedesqc/|QC dashboard>"

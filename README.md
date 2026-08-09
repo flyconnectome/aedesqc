@@ -75,8 +75,9 @@ the first successful run. Trigger a manual run from the **Actions** tab
 
 ## Notes / roadmap
 
-- **FlyTable QC-view deep links are TODO.** crantqc hyperlinked each metric to a
-  specific seatable view (`vid=…`); the equivalent aedes FlyTable base/view IDs
-  are not wired up yet.
+- **FlyTable QC-view deep links** — the *Duplicate root_ids to check* metric
+  links to its FlyTable view (`vid=8yT4`) in both the dashboard and Slack. Add
+  more by supplying the `vid` for each remaining QC view (missing/bad position,
+  etc.) in `report/qc.Rmd` and `R/qc-metrics.R`.
 - **Phase 2**: fill in [`annotators.csv`](annotators.csv) to @-mention the
   responsible person in Slack instead of listing plain annotator names.

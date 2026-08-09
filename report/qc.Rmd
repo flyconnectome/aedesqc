@@ -38,19 +38,25 @@ Data-integrity metrics for the Aedes `aedes_main` FlyTable. Companion
 Actionable problems. `Δ` is the change since the previous run.
 
 ```{r qc-issues}
+# Link a metric to the FlyTable view that lists the offending rows. Only some
+# views exist yet; NA vid renders as "—".
+flytable_base <- "https://flytable.mrc-lmb.cam.ac.uk/workspace/148/dtable/aedes/?tid=0000&vid="
+view_link <- function(vid) if (is.na(vid)) "—" else sprintf("[view](%s%s)", flytable_base, vid)
+
 tibble::tribble(
-  ~Issue,                        ~field,               ~`Recommended action`,
-  "Duplicate root_ids to check", "n_dup_rootids",      "Server-flagged (root_duplicated); resolve genuine dupes or set status=duplicate to keep",
-  "Missing root_id",             "n_missing_rootid",   "Add a position (root_id will follow) or delete the row",
-  "Missing position",            "n_missing_position", "Add a defining point_xyz — the position is the durable identity of a row",
-  "Bad position",                "n_bad_position",     "Review & correct (outside volume, root_id-as-coords, etc.)",
-  "Bad nucleus",                 "n_bad_nucleus",      "Review the flagged nucleus",
-  "Stale root_ids",              "n_stale_rootids",    "Should be ~0 — non-zero means the 30-min FlyTable id-refresh job has stalled"
+  ~Issue,                        ~field,               ~vid,   ~`Recommended action`,
+  "Duplicate root_ids to check", "n_dup_rootids",      "8yT4", "Server-flagged (root_duplicated); resolve genuine dupes or set status=duplicate to keep",
+  "Missing root_id",             "n_missing_rootid",   NA,     "Add a position (root_id will follow) or delete the row",
+  "Missing position",            "n_missing_position", NA,     "Add a defining point_xyz — the position is the durable identity of a row",
+  "Bad position",                "n_bad_position",     NA,     "Review & correct (outside volume, root_id-as-coords, etc.)",
+  "Bad nucleus",                 "n_bad_nucleus",      NA,     "Review the flagged nucleus",
+  "Stale root_ids",              "n_stale_rootids",    NA,     "Should be ~0 — non-zero means the 30-min FlyTable id-refresh job has stalled"
 ) |>
   mutate(Value = vapply(field, val, numeric(1)),
-         `Δ` = vapply(field, delta, character(1))) |>
-  select(Issue, Value, `Δ`, `Recommended action`) |>
-  knitr::kable()
+         `Δ` = vapply(field, delta, character(1)),
+         View = vapply(vid, view_link, character(1))) |>
+  select(Issue, Value, `Δ`, View, `Recommended action`) |>
+  knitr::kable(escape = FALSE)
 ```
 
 *Duplicate root_ids to check* spans **`r val("n_dup_rootids")`** rows over
