@@ -8,6 +8,7 @@ Encoding: UTF-8
 Imports:
     aedes,
     fafbseg,
+    reticulate,
     dplyr,
     readr,
     tidyr,
