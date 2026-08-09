@@ -1,0 +1,19 @@
+date,status,n
+2026-08-09,<none>,924
+2026-08-09,SecondPass,1547
+2026-08-09,adequate,7899
+2026-08-09,check,6
+2026-08-09,complete,12
+2026-08-09,damaged,1
+2026-08-09,duplicate,385
+2026-08-09,fragment,108
+2026-08-09,hard,19
+2026-08-09,incomplete,351
+2026-08-09,large_fragment,13
+2026-08-09,merge_error,50
+2026-08-09,missing soma,69
+2026-08-09,needs_extending,2118
+2026-08-09,not_a_neuron,2
+2026-08-09,outlier_bio,7
+2026-08-09,tiny,8
+2026-08-09,to_review,4720

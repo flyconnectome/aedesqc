@@ -1,0 +1,19 @@
+Package: aedesqc
+Title: Daily QC And Annotation Metrics For The Aedes Dataset
+Version: 0.0.0.9000
+Description: Not a real package - this DESCRIPTION exists so that
+    r-lib/actions/setup-r-dependencies can resolve, install and cache the R
+    packages the QC scripts need.
+Encoding: UTF-8
+Imports:
+    aedes,
+    fafbseg,
+    dplyr,
+    readr,
+    tidyr,
+    ggplot2,
+    jsonlite,
+    rmarkdown
+Remotes:
+    flyconnectome/aedes,
+    natverse/fafbseg

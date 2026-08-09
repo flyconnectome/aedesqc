@@ -1,0 +1,124 @@
+---
+title: "Aedes QC dashboard"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 9, fig.height = 4)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+
+history <- read_csv("../metrics/qc_history.csv", show_col_types = FALSE) |>
+  mutate(date = as.Date(date)) |> arrange(date)
+latest  <- tail(history, 1)
+prev    <- if (nrow(history) >= 2) history[nrow(history) - 1, ] else NULL
+
+val   <- function(f) as.numeric(latest[[f]])
+delta <- function(f) {
+  if (is.null(prev) || is.na(prev[[f]]) || is.na(latest[[f]])) return("")
+  d <- latest[[f]] - prev[[f]]
+  if (d == 0) "–" else sprintf("%+d", d)
+}
+```
+
+Data-integrity metrics for the Aedes `aedes_main` FlyTable. Companion
+[annotation-coverage dashboard](annotation.html). Last updated:
+**`r format(latest$date)`** (UTC). Source:
+[flyconnectome/aedesqc](https://github.com/flyconnectome/aedesqc).
+
+## QC issues (latest)
+
+Actionable problems. `Δ` is the change since the previous run.
+
+```{r qc-issues}
+tibble::tribble(
+  ~Issue,                        ~field,               ~`Recommended action`,
+  "Duplicate root_ids to check", "n_dup_rootids",      "Server-flagged (root_duplicated); resolve genuine dupes or set status=duplicate to keep",
+  "Missing root_id",             "n_missing_rootid",   "Add a position (root_id will follow) or delete the row",
+  "Missing position",            "n_missing_position", "Add a defining point_xyz — the position is the durable identity of a row",
+  "Bad position",                "n_bad_position",     "Review & correct (outside volume, root_id-as-coords, etc.)",
+  "Bad nucleus",                 "n_bad_nucleus",      "Review the flagged nucleus",
+  "Stale root_ids",              "n_stale_rootids",    "Should be ~0 — non-zero means the 30-min FlyTable id-refresh job has stalled"
+) |>
+  mutate(Value = vapply(field, val, numeric(1)),
+         `Δ` = vapply(field, delta, character(1))) |>
+  select(Issue, Value, `Δ`, `Recommended action`) |>
+  knitr::kable()
+```
+
+*Duplicate root_ids to check* spans **`r val("n_dup_rootids")`** rows over
+**`r val("n_dup_rootid_groups")`** root_ids. Unlike the CRANT pipeline these are
+not recomputed here: the value is read straight from the server-maintained
+`root_duplicated` checkbox, set every 30 min by the FlyTable update job for any
+root_id with 2+ rows **after** setting aside rows tagged `status = duplicate`.
+Rows manually tagged `status = duplicate` (**`r val("n_duplicate_status")`**) are
+a deliberate "known duplicate, keep anyway" flag and are excluded from the count
+above.
+
+## Status conventions (aedes vs CRANT)
+
+In aedes, `status` is primarily a **proofreading-workflow** field (`adequate`,
+`to_review`, `needs_extending`, `SecondPass`, `complete`, …) — see the
+[annotation dashboard](annotation.html#proofreading-status-latest) for the full
+breakdown. This is unlike CRANT, where `status` carried QC flags (uppercase,
+comma-joined `DUPLICATED`).
+
+Two lowercase tokens matter for QC and are dropped by default in `aedes_meta()`
+(its `drop_status` default), so this pipeline pulls
+`aedes_meta(drop_status = NULL)` to keep them visible:
+
+- **`duplicate`** — manual "I know this row duplicates another root_id but keep
+  it anyway" flag. Excluded from the server's `root_duplicated` count.
+- **`bad_nucleus`** — flagged nucleus (currently 0 rows, tracked in case it
+  reappears).
+
+## Totals
+
+```{r totals}
+tibble::tribble(
+  ~Metric,                       ~field,
+  "Total rows",                  "n_rows",
+  "Distinct root_ids",           "n_root_ids",
+  "root_duplicated (to check)",  "n_dup_rootids",
+  "status = duplicate",          "n_duplicate_status",
+  "status = bad_nucleus",        "n_bad_nucleus"
+) |>
+  mutate(Value = vapply(field, val, numeric(1)),
+         `Δ` = vapply(field, delta, character(1))) |>
+  select(Metric, Value, `Δ`) |>
+  knitr::kable()
+```
+
+## Trends
+
+```{r trends}
+long <- history |>
+  select(date, starts_with("n_")) |>
+  select(-n_rows, -n_root_ids) |>
+  pivot_longer(-date, names_to = "metric", values_to = "value")
+
+ggplot(long, aes(date, value)) +
+  geom_line() + geom_point(size = 0.8) +
+  facet_wrap(~ metric, scales = "free_y") +
+  labs(x = NULL, y = NULL) +
+  theme_minimal(base_size = 11)
+```
+
+## Totals over time
+
+```{r totals-time}
+history |>
+  select(date, n_rows, n_root_ids) |>
+  pivot_longer(-date, names_to = "metric", values_to = "value") |>
+  ggplot(aes(date, value, colour = metric)) +
+  geom_line() + geom_point(size = 0.8) +
+  labs(x = NULL, y = NULL, colour = NULL) +
+  theme_minimal(base_size = 11)
+```

@@ -1,0 +1,100 @@
+name: aedes-qc
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC daily
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'metrics/**'       # the job's own metrics commit must not retrigger it
+  workflow_dispatch:        # allow manual runs
+
+permissions:
+  contents: write           # commit history back + push to gh-pages
+
+concurrency:
+  group: aedes-qc
+  cancel-in-progress: false
+
+jobs:
+  qc:
+    runs-on: ubuntu-latest
+    env:
+      FLYTABLE_TOKEN: ${{ secrets.FLYTABLE_TOKEN }}
+      QC_SLACK_WEBHOOK_URL: ${{ secrets.QC_SLACK_WEBHOOK_URL }}
+      ANNOTATION_SLACK_WEBHOOK_URL: ${{ secrets.ANNOTATION_SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
+          dependencies: '"hard"'   # Depends/Imports/LinkingTo only; skip Suggests
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install seatable_api (reticulate uses it for aedes_meta)
+        run: |
+          python -m pip install --upgrade pip
+          pip install seatable-api pandas
+          echo "RETICULATE_PYTHON=$(which python)" >> "$GITHUB_ENV"
+
+      - name: Write CAVE token
+        env:
+          FLYWIRE_CAVE_TOKEN: ${{ secrets.FLYWIRE_CAVE_TOKEN }}
+        run: |
+          mkdir -p "$HOME/.cloudvolume/secrets"
+          # aedes authenticates to the flywire/CAVE global server (middleauth).
+          # Write the default secret plus the host-specific name fafbseg may look
+          # for, so flywire_islatest()'s chunkedgraph call can authenticate.
+          for name in cave-secret global.daf-apis.com-cave-secret; do
+            printf '{"token": "%s"}\n' "$FLYWIRE_CAVE_TOKEN" \
+              > "$HOME/.cloudvolume/secrets/${name}.json"
+          done
+
+      - name: Compute QC metrics
+        run: Rscript R/qc-metrics.R
+
+      - name: Compute annotation metrics
+        run: Rscript R/annotation-metrics.R
+
+      - name: Render dashboards
+        run: Rscript R/render-dashboards.R
+
+      - name: Commit metrics
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metrics/qc_history.csv metrics/annotation_history.csv metrics/by_superclass_history.csv metrics/by_status_history.csv
+          if git diff --cached --quiet; then
+            echo "No metrics changes to commit."
+          else
+            git commit -m "QC + annotation metrics $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: Deploy dashboards to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+
+      - name: Post QC Slack summary
+        if: ${{ env.QC_SLACK_WEBHOOK_URL != '' }}
+        run: |
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data @report/qc_slack_payload.json "$QC_SLACK_WEBHOOK_URL"
+
+      - name: Post annotation Slack summary
+        if: ${{ env.ANNOTATION_SLACK_WEBHOOK_URL != '' }}
+        run: |
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data @report/annotation_slack_payload.json "$ANNOTATION_SLACK_WEBHOOK_URL"

@@ -1,0 +1,12 @@
+# generated
+public/
+report/*_slack_payload.json
+report/*.html
+# header.html is a source include, not generated output
+!report/header.html
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata

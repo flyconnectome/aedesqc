@@ -1,0 +1,5 @@
+annotator,slack_id
+# Phase 2: map aedes_main `annotator` values to Slack member ids so the daily
+# summaries can @-mention the responsible person. slack_id looks like
+# U0123ABCD (Profile > ... > Copy member ID). Rows with no match fall back to
+# the plain annotator name. Delete this comment line before use.

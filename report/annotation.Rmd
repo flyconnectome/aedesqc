@@ -1,0 +1,119 @@
+---
+title: "Aedes annotation dashboard"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 9, fig.height = 4)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+
+history  <- read_csv("../metrics/annotation_history.csv", show_col_types = FALSE) |>
+  mutate(date = as.Date(date)) |> arrange(date)
+by_class <- read_csv("../metrics/by_superclass_history.csv", show_col_types = FALSE) |>
+  mutate(date = as.Date(date))
+by_status <- read_csv("../metrics/by_status_history.csv", show_col_types = FALSE) |>
+  mutate(date = as.Date(date))
+latest   <- tail(history, 1)
+prev     <- if (nrow(history) >= 2) history[nrow(history) - 1, ] else NULL
+
+val   <- function(f) as.numeric(latest[[f]])
+delta <- function(f) {
+  if (is.null(prev) || is.na(prev[[f]]) || is.na(latest[[f]])) return("")
+  d <- latest[[f]] - prev[[f]]
+  if (d == 0) "–" else sprintf("%+d", d)
+}
+```
+
+Annotation-coverage metrics for the Aedes `aedes_main` FlyTable. Companion
+[QC dashboard](index.html). Last updated: **`r format(latest$date)`** (UTC).
+Source: [flyconnectome/aedesqc](https://github.com/flyconnectome/aedesqc).
+
+## Coverage (latest)
+
+Rows with a non-empty value in each annotation field, out of
+**`r val("n_rows")`** total rows.
+
+```{r coverage}
+n_rows <- val("n_rows")
+tibble::tribble(
+  ~Field,          ~field,
+  "side",          "n_side",
+  "superclass",    "n_superclass",
+  "class",         "n_class",
+  "subclass",      "n_subclass",
+  "subsubclass",   "n_subsubclass",
+  "type",          "n_type",
+  "hemilineage",   "n_hemilineage",
+  "nerve",         "n_nerve",
+  "neurotransmitter (verified)", "n_nt_verified",
+  "proofreader",   "n_proofreader"
+) |>
+  filter(field %in% names(latest)) |>
+  mutate(Annotated = vapply(field, val, numeric(1)),
+         `% of rows` = round(100 * Annotated / n_rows, 1),
+         `Δ` = vapply(field, delta, character(1))) |>
+  select(Field, Annotated, `% of rows`, `Δ`) |>
+  knitr::kable()
+```
+
+## Coverage over time
+
+```{r coverage-time}
+history |>
+  select(date, starts_with("n_"), -n_rows) |>
+  pivot_longer(-date, names_to = "field", values_to = "value") |>
+  ggplot(aes(date, value, colour = field)) +
+  geom_line() + geom_point(size = 0.8) +
+  labs(x = NULL, y = "rows annotated", colour = NULL) +
+  theme_minimal(base_size = 11)
+```
+
+## Proofreading status (latest)
+
+In aedes `status` is a proofreading-workflow field, so this is a snapshot of
+curation progress (not data-integrity flags — those live on the
+[QC dashboard](index.html)).
+
+```{r bystatus}
+by_status |>
+  filter(date == max(date)) |>
+  arrange(desc(n)) |>
+  select(status, n) |>
+  knitr::kable()
+```
+
+```{r bystatus-time}
+by_status |>
+  ggplot(aes(date, n, fill = status)) +
+  geom_area() +
+  labs(x = NULL, y = "rows", fill = NULL) +
+  theme_minimal(base_size = 11)
+```
+
+## Counts by superclass (latest)
+
+```{r byclass}
+by_class |>
+  filter(date == max(date)) |>
+  arrange(desc(n)) |>
+  select(superclass, n) |>
+  knitr::kable()
+```
+
+## Superclass composition over time
+
+```{r byclass-time}
+by_class |>
+  ggplot(aes(date, n, fill = superclass)) +
+  geom_area() +
+  labs(x = NULL, y = "rows", fill = NULL) +
+  theme_minimal(base_size = 11)
+```
