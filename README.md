@@ -47,9 +47,12 @@ The history before the live pipeline started was reconstructed from archived
 (run locally over dumps in `data/`, which is git-ignored). It reuses the same
 metric code as the live scripts ([`R/metrics-core.R`](R/metrics-core.R)) so
 backfilled and live dates form one continuous series, and it never overwrites an
-existing date — live rows always win. Two caveats on the reconstructed range
-(2026-05-13 →):
+existing date — live rows always win. Dumps come from two sources: zipped
+archives (2025-12-19 → 2026-03-21) and loose daily files (2026-05-13 →), both
+extracted into the git-ignored `data/`. Caveats on the reconstructed range:
 
+- **Gap 2026-03-22 → 2026-05-12** (~7 weeks): no dumps exist, so the trends
+  interpolate a straight line across it.
 - `n_stale_rootids` is **NA** for backfilled dates — currency can only be checked
   against the *current* segmentation, not a historical dump.
 - The daily dumps were not refreshed at weekends, so ~3-day stretches carry the
