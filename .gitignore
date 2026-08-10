@@ -5,6 +5,9 @@ report/*.html
 # header.html is a source include, not generated output
 !report/header.html
 
+# archived FlyTable dumps/zips used to backfill history (large, not source)
+data/
+
 # R
 .Rproj.user/
 .Rhistory

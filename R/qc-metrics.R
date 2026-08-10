@@ -22,6 +22,7 @@ suppressPackageStartupMessages({
 })
 
 source("R/helpers.R")
+source("R/metrics-core.R")
 
 # --- pull ------------------------------------------------------------------
 
@@ -31,36 +32,17 @@ message("Pulling aedes_main ...")
 meta <- aedes_meta(drop_status = NULL, refresh = TRUE)
 message(sprintf("  %d rows, %d columns", nrow(meta), ncol(meta)))
 
-root_id  <- as.character(col_or_na(meta, "root_id"))
-svid     <- as.character(col_or_na(meta, "supervoxel_id"))
-position <- as.character(col_or_na(meta, "point_xyz"))
-status   <- as.character(col_or_na(meta, "status"))
+# Metric definitions live in metrics-core.R so this live pull and the historical
+# TSV backfill (R/backfill-history.R) stay in lock-step.
+masks     <- qc_masks(meta)
+root_id   <- masks$root_id
 annotator <- as.character(col_or_na(meta, "annotator"))
-
-# aedes status tokens are lowercase (cf. CRANT's uppercase DUPLICATED). These
-# are manual flags: `duplicate` = "known duplicate, keep anyway"; `bad_nucleus`
-# = flagged nucleus. Token-wise match handles multi-select comma-joined values.
-is_dup_status   <- status_matches(status, "duplicate")
-is_bad_nucleus  <- status_matches(status, "bad_nucleus")
-
-# `root_duplicated` is a server-maintained checkbox column, set every 30 min by
-# aedes:::aedes_flytable_update(): TRUE for root_ids with 2+ rows AFTER setting
-# aside rows with status == "duplicate". So, unlike CRANT, we do NOT recompute
-# duplicate clashes here — we just read the column. Unchecked cells come back
-# as NA; treat as FALSE.
-is_dup_rootid <- as.logical(col_or_na(meta, "root_duplicated"))
-is_dup_rootid[is.na(is_dup_rootid)] <- FALSE
-dup_ids <- unique(root_id[is_dup_rootid & !is_blank(root_id)])
-
-# QC issue masks:
-missing_rootid <- is_blank(root_id)                    # no root_id
-missing_pos    <- is_blank(position)                   # no point_xyz
-bad_position   <- !is_blank(position) & is_blank(svid) # point present, no supervoxel
 
 # --- stale root ids (chunkedgraph) -----------------------------------------
 
 # The FlyTable job refreshes root_ids every 30 min, so this should be ~0 — it is
-# a canary for that job stalling rather than a routine backlog.
+# a canary for that job stalling rather than a routine backlog. Historical dumps
+# cannot be checked this way, so backfilled rows carry NA here.
 n_stale <- NA_integer_
 is_stale <- rep(FALSE, nrow(meta))
 uroot <- unique(root_id[!is_blank(root_id)])
@@ -78,20 +60,7 @@ if (!is.null(latest) && length(latest) == length(uroot)) {
 # --- assemble metrics row --------------------------------------------------
 
 today <- utc_date()
-row <- tibble(
-  date                = today,
-  n_rows              = nrow(meta),
-  n_root_ids          = length(uroot),
-  # actionable QC issues
-  n_dup_rootids       = sum(is_dup_rootid),   # rows the server flagged root_duplicated
-  n_dup_rootid_groups = length(dup_ids),      # distinct root_ids affected
-  n_duplicate_status  = sum(is_dup_status),   # manually flagged "keep anyway"
-  n_bad_nucleus       = sum(is_bad_nucleus),
-  n_missing_rootid    = sum(missing_rootid),
-  n_missing_position  = sum(missing_pos),
-  n_bad_position      = sum(bad_position),
-  n_stale_rootids     = n_stale
-)
+row <- qc_metrics_row(meta, today, n_stale = n_stale, masks = masks)
 
 print(as.data.frame(row))
 
@@ -116,7 +85,8 @@ line <- function(label, field, vid = NULL, worse_when_up = TRUE) {
 }
 
 # Per-annotator problem counts (any actionable QC issue), latest run.
-problem <- missing_rootid | missing_pos | bad_position | is_dup_rootid | is_stale
+problem <- masks$missing_rootid | masks$missing_pos | masks$bad_position |
+  masks$dup_rootid | is_stale
 ann_tbl <- tibble(annotator = ifelse(is_blank(annotator), "<unknown>", annotator),
                   problem = problem) |>
   filter(.data$problem) |>

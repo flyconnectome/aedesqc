@@ -17,61 +17,28 @@ suppressPackageStartupMessages({
 })
 
 source("R/helpers.R")
+source("R/metrics-core.R")
 
 # --- pull ------------------------------------------------------------------
 
 # drop_status = NULL to describe the whole table. refresh = FALSE: qc-metrics.R
 # runs first in the workflow and has already refreshed the row-wise flytable
-# cache this run, so this is a fast local read.
+# cache this run, so this is a fast local read. Metric definitions live in
+# metrics-core.R, shared with the historical TSV backfill.
 message("Pulling aedes_main ...")
 meta <- aedes_meta(drop_status = NULL, refresh = FALSE)
 message(sprintf("  %d rows, %d columns", nrow(meta), ncol(meta)))
 
-# Annotation fields to track coverage for, in report order. Add/remove here as
-# the schema evolves — col_or_na() tolerates ones not (yet) present.
-ann_fields <- c(
-  side          = "n_side",
-  superclass    = "n_superclass",
-  class         = "n_class",
-  subclass      = "n_subclass",
-  subsubclass   = "n_subsubclass",
-  type          = "n_type",
-  hemilineage   = "n_hemilineage",
-  nerve         = "n_nerve",
-  neurotransmitter_verified = "n_nt_verified",
-  proofreader   = "n_proofreader",
-  annotator     = "n_annotator"
-)
-
-covered <- function(field) sum(!is_blank(col_or_na(meta, field)))
-
 today <- utc_date()
-row <- tibble(date = today, n_rows = nrow(meta))
-for (f in names(ann_fields)) row[[ann_fields[[f]]]] <- covered(f)
+row <- annotation_metrics_row(meta, today)
 
 print(as.data.frame(row))
 
 # --- persist history -------------------------------------------------------
 
 history <- append_dedup("metrics/annotation_history.csv", row)
-
-# Per-superclass counts (long format, one row per class per day).
-superclass <- as.character(col_or_na(meta, "superclass"))
-by_class <- tibble(superclass = superclass) |>
-  mutate(superclass = ifelse(is_blank(superclass), "<none>", superclass)) |>
-  count(superclass, name = "n") |>
-  mutate(date = today, .before = 1)
-append_dedup("metrics/by_superclass_history.csv", by_class)
-
-# Per-status counts (long format). In aedes `status` is a proofreading-workflow
-# field (adequate / to_review / needs_extending / SecondPass / ...), so this is
-# a curation-progress breakdown, not a QC-flag one.
-status <- as.character(col_or_na(meta, "status"))
-by_status <- tibble(status = status) |>
-  mutate(status = ifelse(is_blank(status), "<none>", status)) |>
-  count(status, name = "n") |>
-  mutate(date = today, .before = 1)
-append_dedup("metrics/by_status_history.csv", by_status)
+append_dedup("metrics/by_superclass_history.csv", by_superclass_counts(meta, today))
+append_dedup("metrics/by_status_history.csv", by_status_counts(meta, today))
 
 # Per-annotator row counts (contribution, not problems).
 annotator <- as.character(col_or_na(meta, "annotator"))

@@ -40,6 +40,21 @@ Two dashboards, one Pages site (<https://flyconnectome.github.io/aedesqc/>):
 (coverage counts per field) plus a per-superclass breakdown in
 [`metrics/by_superclass_history.csv`](metrics/by_superclass_history.csv).
 
+### History reconstruction
+
+The history before the live pipeline started was reconstructed from archived
+`aedes_main` FlyTable TSV dumps with [`R/backfill-history.R`](R/backfill-history.R)
+(run locally over dumps in `data/`, which is git-ignored). It reuses the same
+metric code as the live scripts ([`R/metrics-core.R`](R/metrics-core.R)) so
+backfilled and live dates form one continuous series, and it never overwrites an
+existing date — live rows always win. Two caveats on the reconstructed range
+(2026-05-13 →):
+
+- `n_stale_rootids` is **NA** for backfilled dates — currency can only be checked
+  against the *current* segmentation, not a historical dump.
+- The daily dumps were not refreshed at weekends, so ~3-day stretches carry the
+  previous Friday's values forward (visible as small stair-steps in the trends).
+
 ## Differences from crantqc
 
 | | crantqc | aedesqc |
