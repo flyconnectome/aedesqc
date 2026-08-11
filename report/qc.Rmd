@@ -14,6 +14,15 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(readr)
+library(plotly)
+
+# Wrap a ggplot as an interactive plotly widget so hover identifies each series
+# and legend clicks isolate it.
+gp <- function(p, tooltip = "text") {
+  ggplotly(p, tooltip = tooltip) |>
+    layout(hovermode = "closest", legend = list(font = list(size = 10))) |>
+    config(displayModeBar = FALSE)
+}
 
 history <- read_csv("../metrics/qc_history.csv", show_col_types = FALSE) |>
   mutate(date = as.Date(date)) |> arrange(date)
@@ -108,23 +117,27 @@ tibble::tribble(
 long <- history |>
   select(date, starts_with("n_")) |>
   select(-n_rows, -n_root_ids) |>
-  pivot_longer(-date, names_to = "metric", values_to = "value")
+  pivot_longer(-date, names_to = "metric", values_to = "value") |>
+  mutate(text = paste0(metric, "<br>", format(date), ": ", value))
 
-ggplot(long, aes(date, value)) +
+p <- ggplot(long, aes(date, value, group = metric, text = text)) +
   geom_line() + geom_point(size = 0.8) +
   facet_wrap(~ metric, scales = "free_y") +
   labs(x = NULL, y = NULL) +
   theme_minimal(base_size = 11)
+gp(p)
 ```
 
 ## Totals over time
 
 ```{r totals-time}
-history |>
+d <- history |>
   select(date, n_rows, n_root_ids) |>
   pivot_longer(-date, names_to = "metric", values_to = "value") |>
-  ggplot(aes(date, value, colour = metric)) +
+  mutate(text = paste0(metric, "<br>", format(date), ": ", value))
+p <- ggplot(d, aes(date, value, colour = metric, group = metric, text = text)) +
   geom_line() + geom_point(size = 0.8) +
   labs(x = NULL, y = NULL, colour = NULL) +
   theme_minimal(base_size = 11)
+gp(p)
 ```

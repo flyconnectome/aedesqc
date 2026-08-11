@@ -14,6 +14,17 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(readr)
+library(plotly)
+
+# Wrap a ggplot as an interactive plotly widget: hover identifies each line/band
+# (the colour keys are too dense to read otherwise) and clicking a legend entry
+# isolates that series.
+gp <- function(p, tooltip = "text") {
+  ggplotly(p, tooltip = tooltip) |>
+    layout(hovermode = "closest",
+           legend = list(font = list(size = 10))) |>
+    config(displayModeBar = FALSE)
+}
 
 history  <- read_csv("../metrics/annotation_history.csv", show_col_types = FALSE) |>
   mutate(date = as.Date(date)) |> arrange(date)
@@ -67,14 +78,19 @@ tibble::tribble(
 
 ## Coverage over time
 
+Hover a line to identify the field; click a legend entry to isolate it.
+
 ```{r coverage-time}
-history |>
+d <- history |>
   select(date, starts_with("n_"), -n_rows) |>
   pivot_longer(-date, names_to = "field", values_to = "value") |>
-  ggplot(aes(date, value, colour = field)) +
+  mutate(field = sub("^n_", "", field),
+         text = paste0(field, "<br>", format(date), ": ", value, " rows"))
+p <- ggplot(d, aes(date, value, colour = field, group = field, text = text)) +
   geom_line() + geom_point(size = 0.8) +
   labs(x = NULL, y = "rows annotated", colour = NULL) +
   theme_minimal(base_size = 11)
+gp(p)
 ```
 
 ## Proofreading status (latest)
@@ -91,12 +107,16 @@ by_status |>
   knitr::kable()
 ```
 
+Hover a band to identify the status; click a legend entry to isolate it.
+
 ```{r bystatus-time}
-by_status |>
-  ggplot(aes(date, n, fill = status)) +
+d <- by_status |>
+  mutate(text = paste0(status, "<br>", format(date), ": ", n, " rows"))
+p <- ggplot(d, aes(date, n, fill = status, group = status, text = text)) +
   geom_area() +
   labs(x = NULL, y = "rows", fill = NULL) +
   theme_minimal(base_size = 11)
+gp(p)
 ```
 
 ## Counts by superclass (latest)
@@ -111,10 +131,14 @@ by_class |>
 
 ## Superclass composition over time
 
+Hover a band to identify the superclass; click a legend entry to isolate it.
+
 ```{r byclass-time}
-by_class |>
-  ggplot(aes(date, n, fill = superclass)) +
+d <- by_class |>
+  mutate(text = paste0(superclass, "<br>", format(date), ": ", n, " rows"))
+p <- ggplot(d, aes(date, n, fill = superclass, group = superclass, text = text)) +
   geom_area() +
   labs(x = NULL, y = "rows", fill = NULL) +
   theme_minimal(base_size = 11)
+gp(p)
 ```
