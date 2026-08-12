@@ -107,14 +107,16 @@ by_status |>
   knitr::kable()
 ```
 
-Hover a band to identify the status; click a legend entry to isolate it.
+Each line is a status; hover to read its count, click a legend entry to isolate
+it. (Lines rather than a stacked band: `ggplotly` hover is per-point on lines
+but collapses to one label per series on filled areas.)
 
 ```{r bystatus-time}
 d <- by_status |>
   mutate(text = paste0(status, "<br>", format(date), ": ", n, " rows"))
-p <- ggplot(d, aes(date, n, fill = status, group = status, text = text)) +
-  geom_area() +
-  labs(x = NULL, y = "rows", fill = NULL) +
+p <- ggplot(d, aes(date, n, colour = status, group = status, text = text)) +
+  geom_line(linewidth = 0.5) +
+  labs(x = NULL, y = "rows", colour = NULL) +
   theme_minimal(base_size = 11)
 gp(p)
 ```
@@ -129,16 +131,17 @@ by_class |>
   knitr::kable()
 ```
 
-## Superclass composition over time
+## Superclass counts over time
 
-Hover a band to identify the superclass; click a legend entry to isolate it.
+Each line is a superclass; hover to read its count, click a legend entry to
+isolate it.
 
 ```{r byclass-time}
 d <- by_class |>
   mutate(text = paste0(superclass, "<br>", format(date), ": ", n, " rows"))
-p <- ggplot(d, aes(date, n, fill = superclass, group = superclass, text = text)) +
-  geom_area() +
-  labs(x = NULL, y = "rows", fill = NULL) +
+p <- ggplot(d, aes(date, n, colour = superclass, group = superclass, text = text)) +
+  geom_line(linewidth = 0.5) +
+  labs(x = NULL, y = "rows", colour = NULL) +
   theme_minimal(base_size = 11)
 gp(p)
 ```
