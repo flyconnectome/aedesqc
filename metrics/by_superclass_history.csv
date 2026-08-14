@@ -3207,7 +3207,7 @@ date,superclass,n
 2026-08-14,<none>,6
 2026-08-14,ascending_neuron,189
 2026-08-14,ascending_tbc,2
-2026-08-14,cb_intrinsic,12341
+2026-08-14,cb_intrinsic,12347
 2026-08-14,cb_motor,10
 2026-08-14,cb_neuroendocrine,3
 2026-08-14,cb_sensory,4202
@@ -3222,4 +3222,4 @@ date,superclass,n
 2026-08-14,sensory_tbc,154
 2026-08-14,visceral_circulatory,7
 2026-08-14,visual_centrifugal,82
-2026-08-14,visual_projection,824
+2026-08-14,visual_projection,823
