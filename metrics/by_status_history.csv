@@ -3176,3 +3176,21 @@ date,status,n
 2026-08-14,outlier_bio,7
 2026-08-14,tiny,8
 2026-08-14,to_review,4983
+2026-08-15,<none>,943
+2026-08-15,SecondPass,1547
+2026-08-15,adequate,7992
+2026-08-15,check,6
+2026-08-15,complete,12
+2026-08-15,damaged,1
+2026-08-15,duplicate,403
+2026-08-15,fragment,108
+2026-08-15,hard,19
+2026-08-15,incomplete,351
+2026-08-15,large_fragment,13
+2026-08-15,merge_error,50
+2026-08-15,missing soma,70
+2026-08-15,needs_extending,2129
+2026-08-15,not_a_neuron,2
+2026-08-15,outlier_bio,7
+2026-08-15,tiny,8
+2026-08-15,to_review,4984
