@@ -50,7 +50,7 @@ Source: [flyconnectome/aedesqc](https://github.com/flyconnectome/aedesqc).
 ## Coverage (latest)
 
 Rows with a non-empty value in each annotation field, out of
-**`r val("n_rows")`** total rows.
+**`r format(val("n_rows"), scientific = FALSE, big.mark = ",")`** total rows.
 
 ```{r coverage}
 n_rows <- val("n_rows")
@@ -62,6 +62,7 @@ tibble::tribble(
   "subclass",      "n_subclass",
   "subsubclass",   "n_subsubclass",
   "type",          "n_type",
+  "group",         "n_group",
   "hemilineage",   "n_hemilineage",
   "nerve",         "n_nerve",
   "neurotransmitter (verified)", "n_nt_verified",

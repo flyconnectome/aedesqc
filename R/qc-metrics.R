@@ -104,6 +104,7 @@ text <- paste0(
   line("Missing root_id", "n_missing_rootid"), "\n",
   line("Missing position", "n_missing_position"), "\n",
   line("Bad position", "n_bad_position"), "\n",
+  line("Type but no group", "n_type_no_group"), "\n",
   line("Bad nucleus", "n_bad_nucleus"), "\n",
   line("Stale root_ids", "n_stale_rootids"),
   ann_txt,

@@ -69,6 +69,7 @@ text <- paste0(
   line("superclass", "n_superclass"), "\n",
   line("class", "n_class"), "\n",
   line("type", "n_type"), "\n",
+  line("group", "n_group"), "\n",
   line("hemilineage", "n_hemilineage"), "\n",
   line("proofreader", "n_proofreader"), "\n",
   line("annotator", "n_annotator"),

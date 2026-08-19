@@ -34,11 +34,12 @@ Two dashboards, one Pages site (<https://flyconnectome.github.io/aedesqc/>):
 | `n_missing_rootid` | rows with empty `root_id` |
 | `n_missing_position` | rows with empty `point_xyz` |
 | `n_bad_position` | `point_xyz` present but no `supervoxel_id` |
+| `n_type_no_group` | rows with a `type` but an empty `group` |
 | `n_stale_rootids` | `root_id`s no longer current per the chunkedgraph (should be ~0) |
 
 **Annotation** — [`metrics/annotation_history.csv`](metrics/annotation_history.csv)
-(coverage counts per field) plus a per-superclass breakdown in
-[`metrics/by_superclass_history.csv`](metrics/by_superclass_history.csv).
+(coverage counts per field, including `n_group`) plus a per-superclass breakdown
+in [`metrics/by_superclass_history.csv`](metrics/by_superclass_history.csv).
 
 ### History reconstruction
 
@@ -57,6 +58,9 @@ extracted into the git-ignored `data/`. Caveats on the reconstructed range:
   against the *current* segmentation, not a historical dump.
 - The daily dumps were not refreshed at weekends, so ~3-day stretches carry the
   previous Friday's values forward (visible as small stair-steps in the trends).
+- `n_group` and `n_type_no_group` were added later and backfilled from dumps, so
+  they are **NA** for the four live-only dates (2026-08-11 → 2026-08-14) that had
+  no dump; live runs populate them from that point on.
 
 ## Differences from crantqc
 

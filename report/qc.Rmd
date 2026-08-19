@@ -58,6 +58,7 @@ tibble::tribble(
   "Missing root_id",             "n_missing_rootid",   NA,     "Add a position (root_id will follow) or delete the row",
   "Missing position",            "n_missing_position", NA,     "Add a defining point_xyz — the position is the durable identity of a row",
   "Bad position",                "n_bad_position",     NA,     "Review & correct (outside volume, root_id-as-coords, etc.)",
+  "Type but no group",           "n_type_no_group",    NA,     "Row has a type but an empty group — assign the group it belongs to",
   "Bad nucleus",                 "n_bad_nucleus",      NA,     "Review the flagged nucleus",
   "Stale root_ids",              "n_stale_rootids",    NA,     "Should be ~0 — non-zero means the 30-min FlyTable id-refresh job has stalled"
 ) |>

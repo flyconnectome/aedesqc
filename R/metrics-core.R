@@ -13,6 +13,8 @@ qc_masks <- function(meta) {
   root_id  <- as.character(col_or_na(meta, "root_id"))
   svid     <- as.character(col_or_na(meta, "supervoxel_id"))
   position <- as.character(col_or_na(meta, "point_xyz"))
+  type     <- as.character(col_or_na(meta, "type"))
+  group    <- as.character(col_or_na(meta, "group"))
   rd <- as.logical(col_or_na(meta, "root_duplicated"))
   rd[is.na(rd)] <- FALSE
   list(
@@ -20,7 +22,8 @@ qc_masks <- function(meta) {
     dup_rootid     = rd,
     missing_rootid = is_blank(root_id),
     missing_pos    = is_blank(position),
-    bad_position   = !is_blank(position) & is_blank(svid)
+    bad_position   = !is_blank(position) & is_blank(svid),
+    type_no_group  = !is_blank(type) & is_blank(group)
   )
 }
 
@@ -43,6 +46,7 @@ qc_metrics_row <- function(meta, date, n_stale = NA_integer_, masks = qc_masks(m
     n_missing_rootid    = sum(masks$missing_rootid),
     n_missing_position  = sum(masks$missing_pos),
     n_bad_position      = sum(masks$bad_position),
+    n_type_no_group     = sum(masks$type_no_group),
     n_stale_rootids     = n_stale
   )
 }
@@ -57,6 +61,7 @@ annotation_fields <- c(
   subclass      = "n_subclass",
   subsubclass   = "n_subsubclass",
   type          = "n_type",
+  group         = "n_group",
   hemilineage   = "n_hemilineage",
   nerve         = "n_nerve",
   neurotransmitter_verified = "n_nt_verified",
