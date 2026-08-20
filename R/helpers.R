@@ -7,8 +7,15 @@ col_or_na <- function(df, name) {
   if (name %in% names(df)) df[[name]] else rep(NA, nrow(df))
 }
 
-# TRUE where a character column is effectively empty (NA / "" / "0").
-is_blank <- function(x) is.na(x) | trimws(as.character(x)) %in% c("", "0")
+# TRUE where a value is effectively empty. Handles both dump columns (read as
+# character, blank = "") and live aedes_meta() columns (e.g. `group` comes back
+# numeric with ungrouped = NaN, which as.character() turns into "NaN"). "0" is
+# treated as blank too, honouring the aedes convention that group = 0 means
+# ungrouped (no 0 currently exists in the data, but the guard is harmless).
+is_blank <- function(x) {
+  x <- trimws(as.character(x))
+  is.na(x) | x %in% c("", "0", "NA", "NaN")
+}
 
 # TRUE for each status value containing any of `drop` as a token. Handles
 # multi-select (comma-separated) status columns and is case-insensitive, so
