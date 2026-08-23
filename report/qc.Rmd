@@ -114,7 +114,7 @@ tibble::tribble(
 
 ## Trends
 
-```{r trends}
+```{r trends, fig.height = 6}
 long <- history |>
   select(date, starts_with("n_")) |>
   select(-n_rows, -n_root_ids) |>
@@ -125,7 +125,10 @@ p <- ggplot(long, aes(date, value, group = metric, text = text)) +
   geom_line() + geom_point(size = 0.8) +
   facet_wrap(~ metric, scales = "free_y") +
   labs(x = NULL, y = NULL) +
-  theme_minimal(base_size = 11)
+  theme_minimal(base_size = 11) +
+  # Extra vertical gap so each facet's title reads clearly with its own panel
+  # rather than crowding the row above.
+  theme(panel.spacing.y = grid::unit(1.6, "lines"))
 gp(p)
 ```
 
