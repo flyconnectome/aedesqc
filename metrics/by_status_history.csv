@@ -4044,3 +4044,22 @@ date,status,n
 2026-10-03,outlier_seg,1
 2026-10-03,tiny,8
 2026-10-03,to_review,6778
+2026-10-04,<none>,1196
+2026-10-04,SecondPass,1559
+2026-10-04,adequate,9571
+2026-10-04,check,6
+2026-10-04,complete,12
+2026-10-04,damaged,1
+2026-10-04,duplicate,474
+2026-10-04,fragment,104
+2026-10-04,hard,21
+2026-10-04,incomplete,354
+2026-10-04,large_fragment,13
+2026-10-04,merge_error,52
+2026-10-04,missing soma,471
+2026-10-04,needs_extending,2385
+2026-10-04,not_a_neuron,54
+2026-10-04,outlier_bio,7
+2026-10-04,outlier_seg,1
+2026-10-04,tiny,8
+2026-10-04,to_review,6774
