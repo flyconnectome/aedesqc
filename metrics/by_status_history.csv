@@ -4940,3 +4940,23 @@ date,status,n
 2026-11-17,tiny,8
 2026-11-17,to review,1
 2026-11-17,to_review,6339
+2026-11-18,<none>,1329
+2026-11-18,SecondPass,1561
+2026-11-18,adequate,11166
+2026-11-18,check,6
+2026-11-18,complete,3
+2026-11-18,damaged,1
+2026-11-18,duplicate,492
+2026-11-18,fragment,104
+2026-11-18,hard,22
+2026-11-18,incomplete,355
+2026-11-18,large_fragment,13
+2026-11-18,merge_error,63
+2026-11-18,missing soma,343
+2026-11-18,needs_extending,2748
+2026-11-18,not_a_neuron,56
+2026-11-18,outlier_bio,7
+2026-11-18,outlier_seg,1
+2026-11-18,tiny,8
+2026-11-18,to review,1
+2026-11-18,to_review,6340
