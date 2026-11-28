@@ -1,6 +1,9 @@
 # generated
 public/
 report/*_slack_payload.json
+report/capture_status.json
+# synapse capture results fetched by R/capture-metrics.R
+capture/
 report/*.html
 # header.html is a source include, not generated output
 !report/header.html

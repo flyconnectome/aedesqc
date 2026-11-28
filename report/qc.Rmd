@@ -38,7 +38,8 @@ delta <- function(f) {
 ```
 
 Data-integrity metrics for the Aedes `aedes_main` FlyTable. Companion
-[annotation-coverage dashboard](annotation.html). Last updated:
+[annotation-coverage dashboard](annotation.html) and
+[synapse capture](capture.html). Last updated:
 **`r format(latest$date)`** (UTC). Source:
 [flyconnectome/aedesqc](https://github.com/flyconnectome/aedesqc).
 

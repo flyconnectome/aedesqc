@@ -1,0 +1,120 @@
+---
+title: "Aedes synapse capture"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 10, fig.height = 6.5)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+gp <- function(p, tooltip = "text") {
+  ggplotly(p, tooltip = tooltip) |>
+    layout(hovermode = "closest", legend = list(font = list(size = 10))) |>
+    config(displayModeBar = FALSE)
+}
+
+st <- jsonlite::fromJSON("capture_status.json")
+have_curves <- file.exists("../capture/latest.parquet")
+have_history <- file.exists("../capture/history.csv")
+index <- if (file.exists("../capture/index.json"))
+  jsonlite::fromJSON("../capture/index.json")
+pct <- function(x) sprintf("%.1f%%", 100 * x)
+```
+
+```{r stale, results="asis"}
+if (isTRUE(st$stale)) {
+  cat('<div class="alert alert-warning"><strong>These data may be out of date.</strong><ul>',
+      paste0("<li>", htmltools::htmlEscape(unlist(st$problems)), "</li>", collapse = ""),
+      "</ul></div>")
+}
+```
+
+What fraction of all synapses the proofread bodies capture, from the Aedes
+synapse snapshot `r st$capture %||% "?"`
+(`r st$capture_timestamp %||% "?"`). Checked
+`r st$checked`. Companion [QC](index.html) and
+[annotation](annotation.html) dashboards.
+
+Bodies are ranked by tier, then by synapse count within each tier:
+`r if (!is.null(index)) paste(sprintf("**%s**: %s", names(index$tiers), unlist(index$tiers)), collapse = "; ")`.
+A connection is captured once both its bodies are (at the larger of their
+ranks); fractions are of all synapses, including those on no body (root 0).
+The thin navy line is the synapse count of each ranked body.
+
+```{r curves, eval=have_curves}
+# latest.parquet is only fetched along with index.json
+cap <- arrow::read_parquet("../capture/latest.parquet")
+tier_labels <- setNames(paste0(names(index$tiers), ": ", unlist(index$tiers)),
+                        names(index$tiers))
+sub <- sprintf("snapshot %s (%s)", st$capture, substr(st$capture_timestamp, 1, 10))
+```
+
+## Whole brain
+
+```{r whole-brain, eval=have_curves}
+aedes::aedes_plot_capture(
+  select(filter(cap, .data$region == "all"), -"region"),
+  tier_labels = tier_labels, subtitle = sub)
+```
+
+## Central brain and optic lobe
+
+`r if (!is.null(index)) paste("OL:", index$regions$OL)`; CB: everything else.
+Bodies are ranked by their synapses in each region.
+
+```{r cb-ol, fig.height=10, eval=have_curves}
+aedes::aedes_plot_capture(filter(cap, .data$region != "all"),
+                          tier_labels = tier_labels, subtitle = sub)
+```
+
+## Capture at the end of each tier
+
+The `Δ` columns are the change since the previous snapshot.
+
+```{r tier-table, eval=have_history}
+h <- readr::read_csv("../capture/history.csv", show_col_types = FALSE) |>
+  mutate(timestamp = as.POSIXct(.data$timestamp, tz = "UTC")) |>
+  arrange(.data$timestamp)
+fr <- c("frac_pre", "frac_post", "frac_both")
+h |>
+  group_by(.data$region, .data$point) |>
+  mutate(across(all_of(fr), ~ sprintf("%+.1f", 100 * (.x - lag(.x))),
+                .names = "d_{.col}")) |>
+  ungroup() |>
+  filter(.data$tag == last(.data$tag)) |>
+  mutate(region = factor(.data$region, c("all", "CB", "OL")),
+         across(all_of(fr), pct)) |>
+  arrange(.data$region, .data$rank) |>
+  select(region = "region", point = "point", bodies = "rank",
+         pre = "frac_pre", `Δ pre` = "d_frac_pre",
+         post = "frac_post", `Δ post` = "d_frac_post",
+         connections = "frac_both", `Δ conn.` = "d_frac_both") |>
+  knitr::kable(align = "llrrrrrrr", format.args = list(big.mark = ","))
+```
+
+## Trend
+
+Capture of connections (both sides) at the end of tiers A and B.
+
+```{r trend, fig.height=4.5, eval=have_history}
+tr <- h |>
+  filter(.data$point %in% c("end of A", "end of B")) |>
+  mutate(text = sprintf("%s %s %s<br>%s: %s of connections, %s bodies",
+                        .data$tag, format(.data$timestamp, "%Y-%m-%d"),
+                        .data$region, .data$point, pct(.data$frac_both),
+                        format(.data$rank, big.mark = ",")))
+gp(ggplot(tr, aes(.data$timestamp, .data$frac_both, colour = .data$region,
+                  linetype = .data$point, group = interaction(.data$region, .data$point),
+                  text = .data$text)) +
+     geom_line() + geom_point(size = 1) +
+     scale_y_continuous(labels = scales::percent) +
+     labs(x = NULL, y = "connections captured", colour = "region", linetype = NULL) +
+     theme_minimal())
+```

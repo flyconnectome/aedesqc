@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 
-# Render both dashboards to public/ for GitHub Pages:
+# Render the dashboards to public/ for GitHub Pages:
 #   report/qc.Rmd         -> public/index.html        (QC landing page)
 #   report/annotation.Rmd -> public/annotation.html
+#   report/capture.Rmd    -> public/capture.html
 suppressPackageStartupMessages(library(rmarkdown))
 
 dir.create("public", showWarnings = FALSE)
@@ -24,6 +25,7 @@ render_one <- function(rmd, out) {
 
 render_one("report/qc.Rmd", "index.html")
 render_one("report/annotation.Rmd", "annotation.html")
+render_one("report/capture.Rmd", "capture.html")
 
 # Ask crawlers not to index the site (belt-and-braces with the noindex meta tag
 # in report/header.html).
