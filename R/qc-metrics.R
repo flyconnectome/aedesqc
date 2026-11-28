@@ -97,6 +97,14 @@ ann_txt <- if (nrow(ann_tbl)) {
          paste(sprintf("• %s: %d", ann_tbl$annotator, ann_tbl$n), collapse = "\n"))
 } else ""
 
+# Stale synapse snapshot / capture results (from R/capture-metrics.R, run first)
+cap_status <- if (file.exists("report/capture_status.json"))
+  jsonlite::fromJSON("report/capture_status.json")
+cap_txt <- if (isTRUE(cap_status$stale)) {
+  paste0("\n\n:warning: *Synapse data not updating:*\n",
+         paste0("• ", unlist(cap_status$problems), collapse = "\n"))
+} else ""
+
 text <- paste0(
   "*Aedes QC — ", today, "*\n",
   line("Duplicate root_ids to check", "n_dup_rootids", vid = "8yT4"),
@@ -108,10 +116,12 @@ text <- paste0(
   line("Bad nucleus", "n_bad_nucleus"), "\n",
   line("Stale root_ids", "n_stale_rootids"),
   ann_txt,
+  cap_txt,
   "\n\n_", row$n_rows, " rows, ", row$n_root_ids, " distinct root_ids. ",
   row$n_duplicate_status, " tagged status=duplicate (keep-anyway)._",
   "\n\n<https://flyconnectome.github.io/aedesqc/|QC dashboard> · ",
-  "<https://flyconnectome.github.io/aedesqc/annotation.html|Annotation dashboard>"
+  "<https://flyconnectome.github.io/aedesqc/annotation.html|Annotation dashboard> · ",
+  "<https://flyconnectome.github.io/aedesqc/capture.html|Synapse capture>"
 )
 
 dir.create("report", showWarnings = FALSE)
