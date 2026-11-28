@@ -60,6 +60,9 @@ jobs:
               > "$HOME/.cloudvolume/secrets/${name}.json"
           done
 
+      - name: Fetch synapse capture results
+        run: Rscript R/capture-metrics.R
+
       - name: Compute QC metrics
         run: Rscript R/qc-metrics.R
 
