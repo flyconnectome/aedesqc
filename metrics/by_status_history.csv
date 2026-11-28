@@ -5149,7 +5149,7 @@ date,status,n
 2026-11-27,to_review,6423
 2026-11-28,<none>,1327
 2026-11-28,SecondPass,1561
-2026-11-28,adequate,11529
+2026-11-28,adequate,11527
 2026-11-28,check,6
 2026-11-28,complete,3
 2026-11-28,damaged,1
@@ -5164,7 +5164,7 @@ date,status,n
 2026-11-28,not_a_neuron,56
 2026-11-28,outlier_bio,7
 2026-11-28,outlier_seg,1
-2026-11-28,proofread,26
+2026-11-28,proofread,28
 2026-11-28,tiny,8
 2026-11-28,to review,1
 2026-11-28,to_review,6421
